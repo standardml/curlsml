@@ -13,6 +13,7 @@ structure Curl :> CURL =
 	    CurlFFI.curl_easy_set_progress hdl false;
 	    CurlFFI.curl_easy_set_url hdl url;
 	    CurlFFI.curl_easy_set_useragent hdl "smlcurl";
+	    CurlFFI.curl_easy_perform_as_string hdl;
 	    let 
 	       val contents = CurlFFI.curl_easy_get_contents hdl
 	    in

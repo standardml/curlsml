@@ -4,7 +4,6 @@
 #include <string.h>
 
 typedef struct handle_t {
-	bool inuse;
 	char *buffer;
 	size_t buffer_size;
 	enum { ERR_OK, ERR_OOM, ERR_OTHER } error;
@@ -43,7 +42,6 @@ smlcurl_collect_data (void *contents, size_t size, size_t nmemb, void *userp)
 struct handle_t *smlcurl_easy_init(void)
 {
 	handle_t *hdl = malloc(sizeof(handle_t));
-	hdl->inuse = true;
 	hdl->buffer = NULL;
 	hdl->buffer_size = 0;
 	hdl->error = ERR_OK;
@@ -74,7 +72,8 @@ int smlcurl_easy_set_signal(handle_t *hdl, bool signal)
 
 int smlcurl_easy_set_url(handle_t *hdl, const char *url)
 {
-	return curl_easy_setopt(hdl->curl, CURLOPT_URL, url);
+	int r= curl_easy_setopt(hdl->curl, CURLOPT_URL, url);
+	return r;
 }
 
 int smlcurl_easy_set_proxy(handle_t *hdl, const char *proxy)
@@ -87,19 +86,66 @@ int smlcurl_easy_set_useragent(handle_t *hdl, const char *useragent)
 	return curl_easy_setopt(hdl->curl, CURLOPT_USERAGENT, useragent);
 }
 
-void smlcurl_easy_perform_as_string(handle_t *hdl)
+int smlcurl_easy_perform_as_string(handle_t *hdl)
 {
-	  curl_easy_setopt(hdl, CURLOPT_WRITEFUNCTION, smlcurl_collect_data);
-	  curl_easy_setopt(hdl, CURLOPT_WRITEDATA, (void *)&hdl);
+	  curl_easy_setopt(hdl->curl, 
+	  	CURLOPT_WRITEFUNCTION, smlcurl_collect_data);
+	  curl_easy_setopt(hdl->curl, 
+	  	CURLOPT_WRITEDATA, (void *)hdl);
 	  curl_easy_perform(hdl->curl);
+	return 0;
 }
 
-const char *smlcurl_get_contents(handle_t *hdl)
+const char *smlcurl_easy_get_contents(handle_t *hdl)
 {
-	return hdl->buffer ? "" : hdl->buffer;
+	return hdl->buffer ? hdl->buffer : "";
 }
+
+const char *smlcurl_easy_get_effective_url(handle_t *hdl)
+{
+	char *ret;
+	int err=curl_easy_getinfo(hdl->curl, CURLINFO_EFFECTIVE_URL, &ret);
+
+	return ret;
+}
+
+int smlcurl_easy_get_response_code(handle_t *hdl)
+{
+	long ret;
+	int err=curl_easy_getinfo(hdl->curl, CURLINFO_RESPONSE_CODE, &ret);
+
+	return ret;
+}
+
+int smlcurl_easy_get_connect_code(handle_t *hdl)
+{
+	long ret;
+	int err=curl_easy_getinfo(hdl->curl, CURLINFO_HTTP_CONNECTCODE, &ret);
+
+	return ret;
+}
+
+double smlcurl_easy_get_total_time(handle_t *hdl)
+{
+	double ret;
+	int err=curl_easy_getinfo(hdl->curl, CURLINFO_TOTAL_TIME, &ret);
+
+	return ret;
+	
+}
+
+const char * smlcurl_easy_get_content_type(handle_t *hdl)
+{
+	char *ret;
+	int err=curl_easy_getinfo(hdl->curl, CURLINFO_CONTENT_TYPE, &ret);
+
+	return ret ? ret : "";
+}
+
 
 void smlcurl_easy_cleanup(handle_t *hdl)
 {
-	curl_easy_cleanup(hdl);
+	free(hdl->buffer);
+	curl_easy_cleanup(hdl->curl);
 }
+

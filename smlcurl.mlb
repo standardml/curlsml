@@ -2,6 +2,7 @@ $(SML_LIB)/basis/basis.mlb
 $(SML_LIB)/basis/mlton.mlb
 
 ann "allowFFI true" in
+ cstring-mlton.sml
  smlcurllowlevel.sml
 end
 

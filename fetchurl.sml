@@ -1,2 +1,2 @@
 
-val _ = print (Curl.fetchURL "http://google.com")
+val _ = map (fn url => print (Curl.fetchURL url)) (CommandLine.arguments ())
