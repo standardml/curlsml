@@ -1,0 +1,8 @@
+$(SML_LIB)/basis/basis.mlb
+$(SML_LIB)/basis/mlton.mlb
+
+ann "allowFFI true" in
+ smlcurllowlevel.sml
+end
+
+smlcurl.sml
